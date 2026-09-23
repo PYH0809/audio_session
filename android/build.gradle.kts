@@ -2,8 +2,8 @@ group = "com.ryanheise.audio_session"
 version = "1.0-SNAPSHOT"
 
 buildscript {
-    val kotlinVersion = "2.3.20"
-    val agpVersion = "9.0.1"
+    val kotlinVersion = "2.4.0"
+    val agpVersion = "9.1.0"
     repositories {
         google()
         mavenCentral()
@@ -77,8 +77,8 @@ project.extensions.configure(org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjec
 }
 
 dependencies {
-    implementation("androidx.media:media:1.7.0")
-    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.media:media:1.8.0")
+    implementation("androidx.core:core-ktx:1.18.0")
     testImplementation("org.jetbrains.kotlin:kotlin-test")
-    testImplementation("org.mockito:mockito-core:5.0.0")
+    testImplementation("org.mockito:mockito-core:5.23.0")
 }
