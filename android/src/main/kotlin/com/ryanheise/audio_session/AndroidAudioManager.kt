@@ -22,6 +22,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import io.flutter.plugin.common.StandardMethodCodec
 import java.io.IOException
 
 class AndroidAudioManager(applicationContext: Context, messenger: BinaryMessenger) :
@@ -32,7 +33,15 @@ class AndroidAudioManager(applicationContext: Context, messenger: BinaryMessenge
     init {
         if (singleton == null) singleton = AudioManagerSingleton(applicationContext)
         this.messenger = messenger
-        channel = MethodChannel(messenger, "com.ryanheise.android_audio_manager")
+        // PiliPlus: its calls run off the main thread, in order: asking for and abandoning audio
+        // focus are binder calls that held the main thread, which hands Flutter its vsyncs, for
+        // 20 to 35 ms. Focus changes, devices and receivers still reach Dart from the main thread.
+        channel = MethodChannel(
+            messenger,
+            "com.ryanheise.android_audio_manager",
+            StandardMethodCodec.INSTANCE,
+            messenger.makeBackgroundTaskQueue(),
+        )
         singleton!!.add(this)
         channel!!.setMethodCallHandler(this)
     }
@@ -342,6 +351,8 @@ private class AudioManagerSingleton(applicationContext: Context) {
     val isEmpty: Boolean
         get() = instances.size == 0
 
+    // PiliPlus: called off the main thread, and on it as focus is lost.
+    @Synchronized
     fun requestAudioFocus(args: List<*>): Boolean {
         if (audioFocusRequest != null) {
             return true
@@ -370,6 +381,8 @@ private class AudioManagerSingleton(applicationContext: Context) {
         return success
     }
 
+    // PiliPlus: see requestAudioFocus.
+    @Synchronized
     fun abandonAudioFocus(): Boolean {
         if (applicationContext == null) return false
         unregisterNoisyReceiver()
